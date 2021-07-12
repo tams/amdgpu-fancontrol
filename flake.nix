@@ -80,17 +80,17 @@
               };
 
               environment.etc."amdgpu-fancontrol.cfg".text = ''
-                TEMPS = (${
+                TEMPS=(${
                   builtins.concatStringsSep " " (builtins.map
                     (x: builtins.toString ((builtins.elemAt x 0) * 1000))
                     cfg.fanCurve)
                 })
-                PWMS = (${
+                PWMS=(${
                   builtins.concatStringsSep " "
                   (builtins.map (x: builtins.toString (builtins.elemAt x 1))
                     cfg.fanCurve)
                 })
-                DEBUG = ${if cfg.debug then "true" else "false"}
+                DEBUG=${if cfg.debug then "true" else "false"}
               '';
             };
           };
