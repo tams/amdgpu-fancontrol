@@ -1,8 +1,13 @@
 #!/bin/bash
 
+set -e
+set -o pipefail
+
 HYSTERESIS=6000   # in mK
 SLEEP_INTERVAL=1  # in s
-DEBUG=true
+# 1: log when changing fan speed (noisy)
+# 2: also log current temperature on every loop (very noisy)
+DEBUG=0
 
 # set temps (in degrees C * 1000) and corresponding pwm values in ascending order and with the same amount of values
 TEMPS=( 65000 80000 90000 )
@@ -35,8 +40,14 @@ then
 fi
 
 function debug {
-  if $DEBUG; then
-    echo $1
+  if (( DEBUG >= 2 )) ; then
+    echo "$1"
+  fi
+}
+
+function log {
+  if (( DEBUG >= 1 )) ; then
+    echo "$1"
   fi
 }
 
@@ -58,9 +69,9 @@ function set_pwm {
   fi
 
   if [ -z "$TEMP_AT_LAST_PWM_CHANGE" ] || [ "$TEMP" -gt "$TEMP_AT_LAST_PWM_CHANGE" ] || [ $(($(cat $FILE_TEMP) + HYSTERESIS)) -le "$TEMP_AT_LAST_PWM_CHANGE" ]; then
-    $DEBUG || echo "current temp: $TEMP"
-    echo "temp at last change was $TEMP_AT_LAST_PWM_CHANGE"
-    echo "changing pwm to $NEW_PWM"
+    debug "current temp: $TEMP"
+    log "temp at last change was $TEMP_AT_LAST_PWM_CHANGE"
+    log "changing pwm to $NEW_PWM"
     echo "$NEW_PWM" > "$FILE_PWM"
     TEMP_AT_LAST_PWM_CHANGE=$(cat $FILE_TEMP)
   else
@@ -113,7 +124,6 @@ trap "reset_on_exit" SIGINT SIGTERM
 function run_daemon {
   while :; do
     interpolate_pwm
-    debug
     sleep $SLEEP_INTERVAL
   done
 }

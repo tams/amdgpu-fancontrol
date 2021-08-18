@@ -37,13 +37,14 @@
                   "Service to manually define fan curve for AMG GPUs";
               };
 
-              debug = lib.mkOption {
-                type = lib.types.bool;
-                default = false;
+              debugLevel = lib.mkOption {
+                type = lib.types.int;
+                default = 0;
                 description = ''
-                  Enable debugging to syslog.
+                  Debugging to syslog.
 
-                  It is quite chatty, keep in mind before enabling.
+                  1: log when changing fan speed (noisy)
+                  2: also log current temperature on every loop (very noisy)
                 '';
               };
 
@@ -90,7 +91,7 @@
                   (builtins.map (x: builtins.toString (builtins.elemAt x 1))
                     cfg.fanCurve)
                 })
-                DEBUG=${if cfg.debug then "true" else "false"}
+                DEBUG=${builtins.toString cfg.debugLevel}
               '';
             };
           };
